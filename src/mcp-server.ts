@@ -172,6 +172,47 @@ export function createMcpServer(apiKey: string, port: number) {
       };
     },
   );
+  // tool for airtopClient.windows.paginatedExtraction
+  server.tool(
+    "paginatedExtraction",
+    "Extract data from a paginated list",
+    {
+      sessionId: z.string().describe("The session ID"),
+      windowId: z.string().describe("The window ID"),
+      prompt: z.string().describe("The AI prompt to use"),
+      outputSchema: z.string().describe("JSONSchema for the output").optional(),
+    },
+    async ({
+      sessionId,
+      windowId,
+      prompt,
+      outputSchema,
+    }: {
+      sessionId: string;
+      windowId: string;
+      prompt: string;
+      outputSchema?: string | undefined;
+    }) => {
+      const data = await airtopClient.windows.paginatedExtraction(
+        sessionId,
+        windowId,
+        {
+          prompt,
+          configuration: {
+            outputSchema,
+          },
+        },
+      );
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(data),
+          },
+        ],
+      };
+    },
+  );
   return server;
 }
 export function reportAirtopErrors(errors: AirtopError[] | Issue[]) {
