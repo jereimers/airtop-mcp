@@ -53,6 +53,9 @@ async function main() {
     async () => {
       console.warn("createSession request");
       const session = await airtopClient.sessions.create();
+      if (session.errors) {
+        return reportAirtopErrors(session.errors);
+      }
       return {
         content: [
           {
@@ -73,6 +76,9 @@ async function main() {
     async ({ sessionId, url }: { sessionId: string; url: string }) => {
       console.warn("createWindow request", sessionId, url);
       const window = await airtopClient.windows.create(sessionId, { url });
+      if (window.errors) {
+        return reportAirtopErrors(window.errors);
+      }
       return {
         content: [
           {
@@ -111,15 +117,7 @@ async function main() {
       );
       console.warn("pageQuery response", contentSummary);
       if (contentSummary.errors) {
-        return {
-          content: [
-            {
-              type: "text",
-              text: contentSummary.errors[0].message,
-            },
-          ],
-          isError: true,
-        };
+        return reportAirtopErrors(contentSummary.errors);
       }
       return {
         content: [
@@ -196,3 +194,78 @@ async function main() {
 }
 
 main().catch(console.error);
+function reportAirtopErrors(errors):
+  | {
+      [x: string]: unknown;
+      content: (
+        | { [x: string]: unknown; type: "text"; text: string }
+        | {
+            [x: string]: unknown;
+            type: "image";
+            data: string;
+            mimeType: string;
+          }
+        | {
+            [x: string]: unknown;
+            type: "resource";
+            resource:
+              | {
+                  [x: string]: unknown;
+                  text: string;
+                  uri: string;
+                  mimeType?: string | undefined;
+                }
+              | {
+                  [x: string]: unknown;
+                  uri: string;
+                  blob: string;
+                  mimeType?: string | undefined;
+                };
+          }
+      )[];
+      _meta?: { [x: string]: unknown } | undefined;
+      isError?: boolean | undefined;
+    }
+  | PromiseLike<{
+      [x: string]: unknown;
+      content: (
+        | { [x: string]: unknown; type: "text"; text: string }
+        | {
+            [x: string]: unknown;
+            type: "image";
+            data: string;
+            mimeType: string;
+          }
+        | {
+            [x: string]: unknown;
+            type: "resource";
+            resource:
+              | {
+                  [x: string]: unknown;
+                  text: string;
+                  uri: string;
+                  mimeType?: string | undefined;
+                }
+              | {
+                  [x: string]: unknown;
+                  uri: string;
+                  blob: string;
+                  mimeType?: string | undefined;
+                };
+          }
+      )[];
+      _meta?: { [x: string]: unknown } | undefined;
+      isError?: boolean | undefined;
+    }> {
+  return {
+    content: [
+      {
+        type: "text",
+        text: `Errors from the API:\n${errors
+          .map((e) => e.message)
+          .join("\n")}`,
+      },
+    ],
+    isError: true,
+  };
+}
