@@ -1,4 +1,5 @@
-import { AirtopClient } from "@airtop/sdk";
+import { AirtopClient, AirtopError } from "@airtop/sdk";
+import { Issue } from "@airtop/sdk/api";
 import dotenvx from "@dotenvx/dotenvx";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
@@ -36,6 +37,9 @@ async function main() {
 
     You can query the content of a window using the "pageQuery" tool, passing in the session ID and window ID.
     This returns JSON with a content summary.
+
+    You can also let the user interact with the window using the "getWindowInfo" tool,
+    which returns a live view URL that you can share with the user, for them to interact with the window.
 
     Try to reuse the same session and windows for multiple queries to save on costs.`,
     },
@@ -76,7 +80,7 @@ async function main() {
     async ({ sessionId, url }: { sessionId: string; url: string }) => {
       console.warn("createWindow request", sessionId, url);
       const window = await airtopClient.windows.create(sessionId, { url });
-      if (window.errors) {
+      if (window.errors?.length) {
         return reportAirtopErrors(window.errors);
       }
       return {
@@ -148,7 +152,39 @@ async function main() {
       };
     },
   );
-
+  server.tool(
+    "getWindowInfo",
+    `Get information about a browser window, including a live view URL,
+     which lets the user use and interact with the window. Use this to get a URL to share with the user,
+     so they can log into a web site.`,
+    {
+      sessionId: z.string().describe("The session ID"),
+      windowId: z.string().describe("The window ID"),
+    },
+    async ({
+      sessionId,
+      windowId,
+    }: {
+      sessionId: string;
+      windowId: string;
+    }) => {
+      const window = await airtopClient.windows.getWindowInfo(
+        sessionId,
+        windowId,
+      );
+      if (window.errors?.length) {
+        return reportAirtopErrors(window.errors);
+      }
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(window.data),
+          },
+        ],
+      };
+    },
+  );
   const listen = process.argv.includes("--listen");
 
   if (listen) {
@@ -194,77 +230,15 @@ async function main() {
 }
 
 main().catch(console.error);
-function reportAirtopErrors(errors):
-  | {
-      [x: string]: unknown;
-      content: (
-        | { [x: string]: unknown; type: "text"; text: string }
-        | {
-            [x: string]: unknown;
-            type: "image";
-            data: string;
-            mimeType: string;
-          }
-        | {
-            [x: string]: unknown;
-            type: "resource";
-            resource:
-              | {
-                  [x: string]: unknown;
-                  text: string;
-                  uri: string;
-                  mimeType?: string | undefined;
-                }
-              | {
-                  [x: string]: unknown;
-                  uri: string;
-                  blob: string;
-                  mimeType?: string | undefined;
-                };
-          }
-      )[];
-      _meta?: { [x: string]: unknown } | undefined;
-      isError?: boolean | undefined;
-    }
-  | PromiseLike<{
-      [x: string]: unknown;
-      content: (
-        | { [x: string]: unknown; type: "text"; text: string }
-        | {
-            [x: string]: unknown;
-            type: "image";
-            data: string;
-            mimeType: string;
-          }
-        | {
-            [x: string]: unknown;
-            type: "resource";
-            resource:
-              | {
-                  [x: string]: unknown;
-                  text: string;
-                  uri: string;
-                  mimeType?: string | undefined;
-                }
-              | {
-                  [x: string]: unknown;
-                  uri: string;
-                  blob: string;
-                  mimeType?: string | undefined;
-                };
-          }
-      )[];
-      _meta?: { [x: string]: unknown } | undefined;
-      isError?: boolean | undefined;
-    }> {
+function reportAirtopErrors(errors: AirtopError[] | Issue[]) {
   return {
     content: [
       {
         type: "text",
         text: `Errors from the API:\n${errors
-          .map((e) => e.message)
+          .map((e) => e.message ?? `Unknown error: ${JSON.stringify(e)}`)
           .join("\n")}`,
-      },
+      } as const,
     ],
     isError: true,
   };
