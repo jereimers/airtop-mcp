@@ -8,7 +8,7 @@ export const PORT = 3456; // Unique port number
 dotenvx.config({ quiet: true });
 
 // TODO: add a tool to terminate a session
-async function main() {
+export async function main() {
   const apiKey = process.env.AIRTOP_API_KEY;
   if (!apiKey) {
     throw new Error("AIRTOP_API_KEY environment variable is required");
