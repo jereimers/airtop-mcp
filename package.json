@@ -1,6 +1,6 @@
 {
   "name": "airtop-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "MCP server for Airtop integration",
   "main": "dist/server.js",
   "types": "dist/server.d.ts",
