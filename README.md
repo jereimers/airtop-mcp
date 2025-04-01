@@ -4,8 +4,10 @@ A Model Context Protocol (MCP) server that provides tools for interacting with A
 
 ## Installation
 
+TODO: publish to npm
+
 ```bash
-npm install airtop-mcp
+npm install
 ```
 
 ## Usage
@@ -23,23 +25,32 @@ npm install airtop-mcp
    ```
 4. Start the development server:
    ```bash
-   npm run dev
+   npm run dev -- --server
    ```
 
-### Production
+### Use in Claude (Native MacOS)
 
-1. Install globally:
-   ```bash
-   npm install -g airtop-mcp
-   ```
-2. Set your Airtop API key:
-   ```bash
-   export AIRTOP_API_KEY=your_api_key_here
-   ```
-3. Start the server:
-   ```bash
-   airtop-mcp
-   ```
+Go into the Claude app, open up Settings -> Developer -> Edit Config
+
+Add the following:
+(replace `<airtop-mcp-path>` with the path to the airtop-mcp repository)
+
+```json
+{
+  "mcpServers": {
+    "airtop": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "--package",
+        "tsx@latest",
+        "-c",
+        "cd <airtop-mcp-path> && tsx src/server.ts"
+      ]
+    }
+  }
+}
+```
 
 ## Available Tools
 
@@ -47,6 +58,7 @@ npm install airtop-mcp
 - `createWindow`: Create a new browser window in the session
 - `pageQuery`: Query the current page content using AI
 - `terminateSession`: Terminate an Airtop browser session
+- `paginatedExtraction`: Extract data from a paginated list
 
 ## Configuration
 
