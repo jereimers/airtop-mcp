@@ -1,6 +1,6 @@
 import { AirtopClient, AirtopError } from "@airtop/sdk";
-import { Issue } from "@airtop/sdk/api";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+import { Issue } from "@airtop/sdk/api/index.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 export function createMcpServer(apiKey: string, port: number) {

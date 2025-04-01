@@ -2,7 +2,7 @@ import dotenvx from "@dotenvx/dotenvx";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import express, { Request, Response } from "express";
-import { createMcpServer } from "./mcp-server";
+import { createMcpServer } from "./mcp-server.js";
 export const PORT = 3456; // Unique port number
 
 dotenvx.config({ quiet: true });
