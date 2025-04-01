@@ -2,14 +2,6 @@
 
 A Model Context Protocol (MCP) server that provides tools for interacting with Airtop's browser automation service.
 
-## Installation
-
-TODO: publish to npm
-
-```bash
-npm install
-```
-
 ## Usage
 
 ### Development
@@ -33,20 +25,17 @@ npm install
 Go into the Claude app, open up Settings -> Developer -> Edit Config
 
 Add the following:
-(replace `<airtop-mcp-path>` with the path to the airtop-mcp repository)
+(replace `your_api_key_here` with your Airtop API key)
 
 ```json
 {
   "mcpServers": {
     "airtop": {
       "command": "npx",
-      "args": [
-        "-y",
-        "--package",
-        "tsx@latest",
-        "-c",
-        "cd <airtop-mcp-path> && tsx src/server.ts"
-      ]
+      "args": ["-y", "airtop-mcp@latest"],
+      "env": {
+        "AIRTOP_API_KEY": "your_api_key_here"
+      }
     }
   }
 }
