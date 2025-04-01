@@ -5,11 +5,11 @@
   "main": "dist/server.js",
   "types": "dist/server.d.ts",
   "bin": {
-    "airtop-mcp": "./dist/server.js"
+    "airtop-mcp": "./dist/cli.js"
   },
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && chmod +x dist/cli.js",
     "dev": "tsx watch --env-file=.env src/server.ts",
     "start": "node --env-file=.env dist/server.js",
     "lint": "eslint . --ext .ts",
