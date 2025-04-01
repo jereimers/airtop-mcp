@@ -1,15 +1,15 @@
 {
   "name": "airtop-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "MCP server for Airtop integration",
   "main": "dist/server.js",
   "types": "dist/server.d.ts",
   "bin": {
-    "airtop-mcp": "./dist/cli.js"
+    "airtop-mcp": "./bin/airtop-mcp"
   },
   "type": "module",
   "scripts": {
-    "build": "tsc && chmod +x dist/cli.js",
+    "build": "tsc && chmod +x bin/airtop-mcp",
     "dev": "tsx watch --env-file=.env src/server.ts",
     "start": "node --env-file=.env dist/server.js",
     "lint": "eslint . --ext .ts",
