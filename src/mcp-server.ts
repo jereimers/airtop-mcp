@@ -187,25 +187,38 @@ export function createMcpServer(apiKey: string, port: number) {
       prompt: string;
     }) => {
       console.warn("pageQuery request", prompt);
-      const contentSummary = await airtopClient.windows.pageQuery(
-        sessionId,
-        windowId,
-        {
-          prompt,
-        },
-      );
-      console.warn("pageQuery response", contentSummary);
-      if (contentSummary.errors) {
-        return reportAirtopErrors(contentSummary.errors);
-      }
-      return {
-        content: [
+      try {
+        const contentSummary = await airtopClient.windows.pageQuery(
+          sessionId,
+          windowId,
           {
-            type: "text",
-            text: JSON.stringify(contentSummary.data),
+            prompt,
           },
-        ],
-      };
+        );
+        console.warn("pageQuery response", contentSummary);
+        if (contentSummary?.errors) {
+          return reportAirtopErrors(contentSummary.errors);
+        }
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(contentSummary.data),
+            },
+          ],
+        };
+      } catch (err) {
+        console.error("pageQuery failed:", err);
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Internal error during pageQuery: ${String(err)}`,
+            },
+          ],
+          isError: true,
+        };
+      }
     },
   );
 
@@ -329,21 +342,31 @@ export function createMcpServer(apiKey: string, port: number) {
       const clickRequest = coordinate 
         ? { coordinate, elementDescription }
         : { elementDescription };
-        
-      const result = await airtopClient.windows.click(sessionId, windowId, clickRequest);
-      
-      if (result.errors) {
-        return reportAirtopErrors(result.errors);
+      try {
+        const result = await airtopClient.windows.click(sessionId, windowId, clickRequest);
+        if (result?.errors) {
+          return reportAirtopErrors(result.errors);
+        }
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(result.data),
+            },
+          ],
+        };
+      } catch (err) {
+        console.error("click failed:", err);
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Internal error during click: ${String(err)}`,
+            },
+          ],
+          isError: true,
+        };
       }
-      
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(result.data),
-          },
-        ],
-      };
     },
   );
 
@@ -435,21 +458,31 @@ export function createMcpServer(apiKey: string, port: number) {
       windowId: string;
     }) => {
       console.warn("scrape request");
-        
-      const result = await airtopClient.windows.scrapeContent(sessionId, windowId);
-      
-      if (result.errors) {
-        return reportAirtopErrors(result.errors);
+      try {
+        const result = await airtopClient.windows.scrapeContent(sessionId, windowId);
+        if (result?.errors) {
+          return reportAirtopErrors(result.errors);
+        }
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(result.data),
+            },
+          ],
+        };
+      } catch (err) {
+        console.error("scrape failed:", err);
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Internal error during scrape: ${String(err)}`,
+            },
+          ],
+          isError: true,
+        };
       }
-      
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(result.data),
-          },
-        ],
-      };
     },
   );
 
@@ -543,13 +576,33 @@ export function createMcpServer(apiKey: string, port: number) {
   return server;
 }
 export function reportAirtopErrors(errors: AirtopError[] | Issue[]) {
+  // Log the raw errors for debugging purposes
+  try {
+    console.error("Airtop API returned errors:", errors);
+  } catch (_) {
+    // ignore logging issues
+  }
+
+  const formatted =
+    Array.isArray(errors) && errors.length > 0
+      ? errors
+          .map((e) => {
+            if (!e) return "Unknown error (empty)";
+            // If it's an object with a message property
+            // prefer that, otherwise JSON stringify the entry
+            // also handle plain strings
+            if (typeof e === "string") return e;
+            // @ts-ignore
+            return e.message ?? JSON.stringify(e);
+          })
+          .join("\n")
+      : String(errors);
+
   return {
     content: [
       {
         type: "text",
-        text: `Errors from the API:\n${errors
-          .map((e) => e.message ?? `Unknown error: ${JSON.stringify(e)}`)
-          .join("\n")}`,
+        text: `Errors from the API:\n${formatted}`,
       } as const,
     ],
     isError: true,
