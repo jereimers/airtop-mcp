@@ -1,7 +1,14 @@
 import { AirtopClient, AirtopError } from "@airtop/sdk";
 import { Issue } from "@airtop/sdk/api/index.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+
 import { z } from "zod";
+
+// Define the expected response type for uploadFileAndSelectInput
+interface UploadFileResponse {
+  fileId: string;
+  [key: string]: unknown;
+}
 
 // Session tracking for profile management
 interface SessionMetadata {
@@ -461,14 +468,6 @@ export function createMcpServer(apiKey: string, port: number) {
       elementDescription: string;
       filePath: string;
     }) => {
-      // Define the expected return type for uploadFileAndSelectInput
-      interface UploadFileAndSelectInputResult {
-      // Define the expected response type for uploadFileAndSelectInput
-      interface UploadFileResponse {
-        fileId: string;
-        [key: string]: unknown;
-      }
-
       try {
         const result: UploadFileResponse = await airtopClient.windows.uploadFileAndSelectInput(
           sessionId, 
@@ -478,7 +477,6 @@ export function createMcpServer(apiKey: string, port: number) {
             uploadFilePath: filePath
           }
         );
-        
         return {
           content: [
             {
@@ -502,11 +500,7 @@ export function createMcpServer(apiKey: string, port: number) {
           isError: true,
         };
       }
-        };
-      }
-        };
-      }
-    },
+    }
   );
 
   server.tool(
